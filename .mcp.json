@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "rpg": {
+      "command": "./bin/rpg",
+      "args": []
+    }
+  }
+}
