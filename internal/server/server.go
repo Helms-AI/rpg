@@ -19,7 +19,7 @@ type Server struct {
 
 // New creates a new MCP server with all tools and resources registered.
 // outputDir specifies the base directory for generated projects (e.g., "./output").
-// Generated projects will be placed in outputDir/<project-name>/<language>/.
+// Generated projects will be placed in outputDir/<language>/.
 func New(outputDir string) *Server {
 	// Create language registry
 	registry := languages.NewRegistry()
@@ -32,9 +32,8 @@ func New(outputDir string) *Server {
 		},
 		&mcp.ServerOptions{
 			Instructions: "A markdown-driven multi-language code generation tool. " +
-				"Parse spec files and get generation context with language-specific conventions and prompts. " +
-				"After generating code in multiple languages, use ensure_parity to verify feature consistency " +
-				"across implementations. The first project passed becomes the reference implementation.",
+				"Specs can be written in any narrative format - architecture docs, API designs, or feature descriptions. " +
+				"The AI interprets the spec content directly to generate idiomatic code in the target language.",
 			Logger: slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 				Level: slog.LevelInfo,
 			})),
@@ -72,25 +71,25 @@ func (s *Server) registerTools() {
 	// Tool: parse_spec
 	mcp.AddTool(s.mcpServer, &mcp.Tool{
 		Name:        "parse_spec",
-		Description: "Parse and validate a markdown specification file",
+		Description: "Read a markdown specification file and return its content. The spec can be in any format - narrative descriptions, API designs, architecture documentation, or any markdown that describes an application.",
 	}, s.handleParseSpec)
 
 	// Tool: validate_spec
 	mcp.AddTool(s.mcpServer, &mcp.Tool{
 		Name:        "validate_spec",
-		Description: "Validate a spec file and return any errors or warnings",
+		Description: "Check if a spec file exists and contains content. Returns valid if the file is readable and non-empty.",
 	}, s.handleValidateSpec)
 
 	// Tool: get_generation_context
 	mcp.AddTool(s.mcpServer, &mcp.Tool{
 		Name:        "get_generation_context",
-		Description: "Get full context for code generation including parsed spec, language conventions, and prompt template",
+		Description: "Get full context for code generation. Returns the raw spec content along with language-specific conventions and prompt template. The AI interprets the spec content directly to generate idiomatic code.",
 	}, s.handleGetGenerationContext)
 
 	// Tool: get_project_structure
 	mcp.AddTool(s.mcpServer, &mcp.Tool{
 		Name:        "get_project_structure",
-		Description: "Get recommended file structure for a spec in a target language",
+		Description: "Get recommended file structure for a project in the target language. Requires a project name for directory naming.",
 	}, s.handleGetProjectStructure)
 
 	// Tool: ensure_parity
@@ -112,21 +111,21 @@ func (s *Server) registerResources() {
 	s.mcpServer.AddResource(&mcp.Resource{
 		Name:        "simple-function-example",
 		URI:         "spec://examples/simple-function",
-		Description: "Example spec for a simple function (slugify)",
+		Description: "Example spec for a simple function (slugify) - narrative style",
 		MIMEType:    "text/markdown",
 	}, s.handleExampleResource("simple-function"))
 
 	s.mcpServer.AddResource(&mcp.Resource{
 		Name:        "module-example",
 		URI:         "spec://examples/module",
-		Description: "Example spec for a module with multiple functions and types",
+		Description: "Example spec for a validation module - narrative style",
 		MIMEType:    "text/markdown",
 	}, s.handleExampleResource("module"))
 
 	s.mcpServer.AddResource(&mcp.Resource{
 		Name:        "full-project-example",
 		URI:         "spec://examples/full-project",
-		Description: "Example spec for a full project scaffold",
+		Description: "Example spec for a REST API project - narrative style",
 		MIMEType:    "text/markdown",
 	}, s.handleExampleResource("full-project"))
 

@@ -27,17 +27,17 @@ type ListLanguagesOutput struct {
 
 // ParseSpecInput contains the path to a spec file
 type ParseSpecInput struct {
-	SpecPath string `json:"specPath" jsonschema:"required" jsonschema_description:"Absolute path to the .spec.md file"`
+	SpecPath string `json:"specPath" jsonschema:"required" jsonschema_description:"Path to the markdown spec file"`
 }
 
-// ParseSpecOutput contains the parsed spec
+// ParseSpecOutput contains the raw spec content
 type ParseSpecOutput struct {
-	Spec *spec.Spec `json:"spec"`
+	Content string `json:"content"` // Raw markdown content
 }
 
 // ValidateSpecInput contains the path to a spec file
 type ValidateSpecInput struct {
-	SpecPath string `json:"specPath" jsonschema:"required" jsonschema_description:"Absolute path to the .spec.md file"`
+	SpecPath string `json:"specPath" jsonschema:"required" jsonschema_description:"Path to the markdown spec file"`
 }
 
 // ValidateSpecOutput contains validation results
@@ -48,22 +48,22 @@ type ValidateSpecOutput struct {
 
 // GetGenerationContextInput contains spec path and target language
 type GetGenerationContextInput struct {
-	SpecPath string `json:"specPath" jsonschema:"required" jsonschema_description:"Absolute path to the .spec.md file"`
+	SpecPath string `json:"specPath" jsonschema:"required" jsonschema_description:"Path to the markdown spec file"`
 	Language string `json:"language" jsonschema:"required" jsonschema_description:"Target language ID (go, rust, java, python, typescript, csharp)"`
 }
 
 // GetGenerationContextOutput contains full generation context
 type GetGenerationContextOutput struct {
-	Spec           *spec.Spec         `json:"spec"`
-	Language       languages.Language `json:"language"`
-	PromptTemplate string             `json:"promptTemplate"`
-	OutputDir      string             `json:"outputDir"`
+	SpecContent    string             `json:"specContent"`    // Raw markdown content
+	Language       languages.Language `json:"language"`       // Target language conventions
+	PromptTemplate string             `json:"promptTemplate"` // Generation prompt
+	OutputDir      string             `json:"outputDir"`      // Where to write output
 }
 
-// GetProjectStructureInput contains spec path and target language
+// GetProjectStructureInput contains project name and target language
 type GetProjectStructureInput struct {
-	SpecPath string `json:"specPath" jsonschema:"required" jsonschema_description:"Absolute path to the .spec.md file"`
-	Language string `json:"language" jsonschema:"required" jsonschema_description:"Target language ID (go, rust, java, python, typescript, csharp)"`
+	ProjectName string `json:"projectName" jsonschema:"required" jsonschema_description:"Name for the project (used for output directory and file naming)"`
+	Language    string `json:"language" jsonschema:"required" jsonschema_description:"Target language ID (go, rust, java, python, typescript, csharp)"`
 }
 
 // GetProjectStructureOutput contains recommended file structure
@@ -74,8 +74,8 @@ type GetProjectStructureOutput struct {
 
 // EnsureParityInput contains projects to check for parity
 type EnsureParityInput struct {
-	SpecPath string          `json:"specPath" jsonschema:"required" jsonschema_description:"Path to the original spec file"`
-	Projects []ProjectInfo   `json:"projects" jsonschema:"required" jsonschema_description:"List of generated projects to compare"`
+	SpecPath string        `json:"specPath" jsonschema:"required" jsonschema_description:"Path to the original spec file"`
+	Projects []ProjectInfo `json:"projects" jsonschema:"required" jsonschema_description:"List of generated projects to compare"`
 }
 
 // ProjectInfo identifies a generated project
@@ -86,18 +86,18 @@ type ProjectInfo struct {
 
 // EnsureParityOutput contains the parity analysis and fix instructions
 type EnsureParityOutput struct {
-	ParityScore       float64           `json:"parityScore"`
-	ReferenceLanguage string            `json:"referenceLanguage"`
-	FeatureMatrix     []FeatureStatus   `json:"featureMatrix"`
-	Gaps              []ParityGap       `json:"gaps"`
-	FixInstructions   string            `json:"fixInstructions"`
+	ParityScore       float64         `json:"parityScore"`
+	ReferenceLanguage string          `json:"referenceLanguage"`
+	FeatureMatrix     []FeatureStatus `json:"featureMatrix"`
+	Gaps              []ParityGap     `json:"gaps"`
+	FixInstructions   string          `json:"fixInstructions"`
 }
 
 // FeatureStatus tracks a feature across all implementations
 type FeatureStatus struct {
-	ID            string                     `json:"id"`
-	Name          string                     `json:"name"`
-	Category      string                     `json:"category"`
+	ID              string                     `json:"id"`
+	Name            string                     `json:"name"`
+	Category        string                     `json:"category"`
 	Implementations map[string]Implementation `json:"implementations"`
 }
 
@@ -111,14 +111,14 @@ type Implementation struct {
 
 // ParityGap represents a missing or different feature
 type ParityGap struct {
-	FeatureID        string `json:"featureId"`
-	FeatureName      string `json:"featureName"`
-	Category         string `json:"category"`
-	MissingIn        string `json:"missingIn"`
-	ReferenceFile    string `json:"referenceFile"`
-	ReferenceCode    string `json:"referenceCode"`
-	SuggestedFix     string `json:"suggestedFix"`
-	TargetFile       string `json:"targetFile"`
+	FeatureID     string `json:"featureId"`
+	FeatureName   string `json:"featureName"`
+	Category      string `json:"category"`
+	MissingIn     string `json:"missingIn"`
+	ReferenceFile string `json:"referenceFile"`
+	ReferenceCode string `json:"referenceCode"`
+	SuggestedFix  string `json:"suggestedFix"`
+	TargetFile    string `json:"targetFile"`
 }
 
 // ImportSpecFromSourceInput contains the input directory path
@@ -161,21 +161,7 @@ func (s *Server) handleParseSpec(ctx context.Context, req *mcp.CallToolRequest, 
 		}, ParseSpecOutput{}, nil
 	}
 
-	// Parse the spec
-	parsedSpec, err := parser.Parse(string(content))
-	if err != nil {
-		return &mcp.CallToolResult{
-			IsError: true,
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: fmt.Sprintf("Failed to parse spec: %v", err)},
-			},
-		}, ParseSpecOutput{}, nil
-	}
-
-	// Normalize to ensure all slices are non-nil for valid JSON schema output
-	parsedSpec.Normalize()
-
-	return nil, ParseSpecOutput{Spec: parsedSpec}, nil
+	return nil, ParseSpecOutput{Content: string(content)}, nil
 }
 
 func (s *Server) handleValidateSpec(ctx context.Context, req *mcp.CallToolRequest, input ValidateSpecInput) (*mcp.CallToolResult, ValidateSpecOutput, error) {
@@ -221,26 +207,12 @@ func (s *Server) handleGetGenerationContext(ctx context.Context, req *mcp.CallTo
 		}, GetGenerationContextOutput{}, nil
 	}
 
-	// Parse the spec
-	parsedSpec, err := parser.Parse(string(content))
-	if err != nil {
-		return &mcp.CallToolResult{
-			IsError: true,
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: fmt.Sprintf("Failed to parse spec: %v", err)},
-			},
-		}, GetGenerationContextOutput{}, nil
-	}
-
-	// Normalize to ensure all slices are non-nil for valid JSON schema output
-	parsedSpec.Normalize()
-
-	// Build output directory path: outputDir/<project-name>/<language>/
-	outputPath := filepath.Join(s.outputDir, parsedSpec.Name, input.Language)
+	// Build output directory path
+	outputPath := filepath.Join(s.outputDir, input.Language)
 
 	// Build the response
 	return nil, GetGenerationContextOutput{
-		Spec:           parsedSpec,
+		SpecContent:    string(content),
 		Language:       adapter.GetLanguage(),
 		PromptTemplate: adapter.GetPromptContext(),
 		OutputDir:      outputPath,
@@ -259,35 +231,10 @@ func (s *Server) handleGetProjectStructure(ctx context.Context, req *mcp.CallToo
 		}, GetProjectStructureOutput{}, nil
 	}
 
-	// Read and parse the spec to determine if it has tests
-	content, err := os.ReadFile(input.SpecPath)
-	if err != nil {
-		return &mcp.CallToolResult{
-			IsError: true,
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: fmt.Sprintf("Failed to read spec file: %v", err)},
-			},
-		}, GetProjectStructureOutput{}, nil
-	}
-
-	parsedSpec, err := parser.Parse(string(content))
-	if err != nil {
-		return &mcp.CallToolResult{
-			IsError: true,
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: fmt.Sprintf("Failed to parse spec: %v", err)},
-			},
-		}, GetProjectStructureOutput{}, nil
-	}
-
-	// Normalize to ensure all slices are non-nil for valid JSON schema output
-	parsedSpec.Normalize()
-
-	hasTests := len(parsedSpec.Tests) > 0
-	files := adapter.GetProjectStructure(parsedSpec.Name, hasTests)
+	files := adapter.GetProjectStructure(input.ProjectName, false)
 
 	// Build output directory path: outputDir/<project-name>/<language>/
-	outputPath := filepath.Join(s.outputDir, parsedSpec.Name, input.Language)
+	outputPath := filepath.Join(s.outputDir, input.ProjectName, input.Language)
 
 	return nil, GetProjectStructureOutput{
 		Files:     files,
@@ -771,343 +718,114 @@ func getExampleSpec(name string) string {
 	}
 }
 
-// Example specs (embedded)
+// Example specs (embedded) - narrative style
 const simpleFunctionExample = `# slugify
 
 A utility function to convert text into URL-friendly slugs.
 
-## Target Languages
+## Overview
 
-- go
-- python
-- typescript
+This function takes any text input and transforms it into a clean, URL-safe string by:
+- Converting to lowercase
+- Replacing spaces and special characters with a separator (default: hyphen)
+- Removing consecutive separators
+- Trimming separators from the start and end
 
-## Functions
+## Parameters
 
-### slugify
+- **text** (required): The input string to slugify
+- **separator** (optional, default: "-"): Character to use between words
 
-Converts a string into a URL-friendly slug.
+## Expected Behavior
 
-**accepts:**
-- text: Text
-- separator: Text (defaults to "-")
-
-**returns:** Text
-
-**logic:**
-` + "```" + `
-convert text to lowercase
-replace all whitespace with the separator
-remove all characters that are not letters, numbers, or the separator
-collapse multiple consecutive separators into one
-trim separators from start and end
-return the result
-` + "```" + `
-
-## Tests
-
-### slugify
-
-#### test: converts simple text
-given: "Hello World"
-expect: "hello-world"
-
-#### test: handles special characters
-given: "Hello, World! How are you?"
-expect: "hello-world-how-are-you"
-
-#### test: uses custom separator
-given:
-- text: "Hello World"
-- separator: "_"
-expect: "hello_world"
+| Input | Output |
+|-------|--------|
+| "Hello World" | "hello-world" |
+| "Hello, World! How are you?" | "hello-world-how-are-you" |
+| "Café Au Lait" | "cafe-au-lait" |
+| "Hello World" with separator "_" | "hello_world" |
 `
 
 const moduleExample = `# validation-utils
 
-A module for validating common data formats.
+A module for validating common data formats like email addresses, URLs, and phone numbers.
 
-## Meta
+## Overview
 
-- version: 2.0.0
-- license: MIT
+Provides reusable validation functions that return clear success/failure results with error messages. Designed for form validation and data sanitization.
 
-## Target Languages
+## Email Validation
 
-- typescript
-- python
-- go
+Should validate that an email address:
+- Is not empty
+- Contains exactly one @ symbol
+- Has a non-empty local part (before @)
+- Has a non-empty domain (after @)
+- Domain contains at least one dot
 
-## Types
+Returns either "valid" or "invalid" with a list of specific error messages.
 
-### ValidationResult
-is one of:
-- Valid
-- Invalid with errors: List of Text
+## Email Parsing
 
-### EmailParts
-contains:
-- local: Text
-- domain: Text
+If an email is valid, extract its components:
+- Local part (before @)
+- Domain (after @)
 
-## Functions
-
-### validate_email
-
-Validates an email address format.
-
-**accepts:**
-- email: Text
-
-**returns:** ValidationResult
-
-**logic:**
-` + "```" + `
-set errors to empty list
-
-if email is empty:
-    add "Email cannot be empty" to errors
-    return Invalid with errors
-
-if email does not contain exactly one "@":
-    add "Email must contain exactly one @ symbol" to errors
-    return Invalid with errors
-
-split email by "@" into local_part and domain
-
-if local_part is empty:
-    add "Local part cannot be empty" to errors
-
-if domain is empty:
-    add "Domain cannot be empty" to errors
-
-if domain does not contain ".":
-    add "Domain must contain at least one dot" to errors
-
-if errors is not empty:
-    return Invalid with errors
-
-return Valid
-` + "```" + `
-
-### parse_email
-
-Parses a valid email into its components.
-
-**accepts:**
-- email: Text
-
-**returns:** Optional EmailParts
-
-**logic:**
-` + "```" + `
-set validation to validate_email(email)
-
-if validation is Invalid:
-    return Nothing
-
-split email by "@" into local_part and domain
-
-return EmailParts with:
-    local: local_part
-    domain: domain
-` + "```" + `
-
-## Tests
-
-### validate_email
-
-#### test: accepts valid email
-given: "user@example.com"
-expect: Valid
-
-#### test: rejects empty email
-given: ""
-expect: Invalid with errors containing "cannot be empty"
-
-#### test: rejects email without @
-given: "userexample.com"
-expect: Invalid with errors containing "@ symbol"
+If invalid, return nothing/null.
 `
 
 const fullProjectExample = `# task-api
 
 A RESTful API for managing tasks with user authentication.
 
-## Meta
+## Overview
 
-- version: 1.0.0
-- author: Development Team
-- license: Apache-2.0
-- description: Task management API with JWT authentication
+A backend service that provides:
+- User registration and JWT-based authentication
+- CRUD operations for tasks
+- Task filtering by status and priority
+- Due date tracking
 
-## Target Languages
+## Authentication
 
-- typescript
-- python
-- go
+Users authenticate with email/password and receive a JWT token valid for 24 hours. All task endpoints require a valid token in the Authorization header.
 
-## Dependencies
-
-### Required
-- HTTP server framework
-- JSON Web Token (JWT) library
-- Database ORM/query builder
-- Password hashing (bcrypt or argon2)
-- UUID generator
-
-## Types
+## Data Model
 
 ### User
-contains:
-- id: UUID
-- email: Text (unique)
-- password_hash: Text
-- name: Text
-- created_at: Timestamp
-- updated_at: Timestamp
+- Unique identifier
+- Email (unique)
+- Hashed password
+- Display name
+- Timestamps (created, updated)
 
 ### Task
-contains:
-- id: UUID
-- title: Text
-- description: Optional Text
-- status: TaskStatus
-- priority: Priority
-- owner_id: UUID (references User)
-- due_date: Optional Timestamp
-- created_at: Timestamp
-- updated_at: Timestamp
+- Unique identifier
+- Title (required)
+- Description (optional)
+- Status: pending, in_progress, completed, cancelled
+- Priority: low, medium, high, urgent
+- Owner (references user)
+- Due date (optional)
+- Timestamps (created, updated)
 
-### TaskStatus
-is one of:
-- Pending
-- InProgress
-- Completed
-- Cancelled
+## API Endpoints
 
-### Priority
-is one of:
-- Low
-- Medium
-- High
-- Urgent
+### Authentication
+- POST /auth/register - Create new user
+- POST /auth/login - Get JWT token
 
-### CreateTaskRequest
-contains:
-- title: Text
-- description: Optional Text
-- priority: Priority (defaults to Medium)
-- due_date: Optional Timestamp
+### Tasks (requires authentication)
+- GET /tasks - List user's tasks (supports filtering)
+- POST /tasks - Create new task
+- GET /tasks/:id - Get task details
+- PUT /tasks/:id - Update task
+- DELETE /tasks/:id - Delete task
 
-## Functions
+## Configuration
 
-### authenticate_user [async]
-
-Authenticates a user and returns a JWT token.
-
-**accepts:**
-- email: Text
-- password: Text
-
-**returns:** Result of AuthToken
-
-**logic:**
-` + "```" + `
-await user from find user by email in database
-
-if user does not exist:
-    return Failure with AuthError "Invalid credentials"
-
-set password_valid to verify password against user.password_hash
-
-if password_valid is false:
-    return Failure with AuthError "Invalid credentials"
-
-set token to generate JWT with:
-    subject: user.id
-    expiration: 24 hours from now
-
-return Success with AuthToken:
-    access_token: token
-    token_type: "Bearer"
-    expires_in: 86400
-` + "```" + `
-
-**errors:**
-- AuthError: invalid credentials or expired token
-
-### create_task [async]
-
-Creates a new task for the authenticated user.
-
-**accepts:**
-- request: CreateTaskRequest
-- user_id: UUID (from auth context)
-
-**returns:** Task
-
-**logic:**
-` + "```" + `
-set new_task to Task with:
-    id: generate new UUID
-    title: request.title
-    description: request.description
-    status: Pending
-    priority: request.priority or Medium
-    owner_id: user_id
-    due_date: request.due_date
-    created_at: current timestamp
-    updated_at: current timestamp
-
-await save new_task to database
-
-return new_task
-` + "```" + `
-
-## Tests
-
-### authenticate_user
-
-#### test: returns token for valid credentials
-given:
-- email: "test@example.com"
-- password: "correct_password"
-setup:
-- user exists with email and matching password hash
-expect: Success with AuthToken containing access_token
-
-#### test: fails for wrong password
-given:
-- email: "test@example.com"
-- password: "wrong_password"
-setup:
-- user exists with email
-expect: Failure with AuthError
-
-## Project Structure
-
-` + "```" + `
-/
-├── src/
-│   ├── main.[ext]              # Application entry point
-│   ├── config.[ext]            # Configuration loading
-│   ├── routes/
-│   │   ├── auth.[ext]          # Authentication endpoints
-│   │   └── tasks.[ext]         # Task CRUD endpoints
-│   ├── middleware/
-│   │   ├── auth.[ext]          # JWT validation middleware
-│   │   └── error_handler.[ext] # Global error handling
-│   ├── services/
-│   │   ├── auth_service.[ext]  # Authentication logic
-│   │   └── task_service.[ext]  # Task business logic
-│   ├── models/
-│   │   └── index.[ext]         # Database models
-│   └── types/
-│       └── index.[ext]         # Type definitions
-├── tests/
-│   ├── auth_test.[ext]
-│   └── tasks_test.[ext]
-└── [package manifest]
-` + "```" + `
+Environment variables:
+- PORT (default: 3000)
+- JWT_SECRET (required)
+- DATABASE_URL (required)
 `
