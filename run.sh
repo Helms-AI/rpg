@@ -50,17 +50,16 @@ show_help() {
     echo ""
     echo "Options:"
     echo "  --build     Build the binary and docs (don't start servers)"
-    echo "  --docs      Only start the docs server on port ${DOCS_PORT}"
+    echo "  --docs      Start the production docs server on port ${DOCS_PORT}"
     echo "  --mcp       Only start the MCP server (no docs)"
     echo "  --clean     Clean build artifacts before building"
-    echo "  --dev       Start docs in development mode (hot reload)"
     echo "  --help      Show this help message"
     echo ""
     echo "Examples:"
-    echo "  ./run.sh              # Build and start both MCP server and docs"
-    echo "  ./run.sh --docs       # Just start the documentation server"
+    echo "  ./run.sh              # Start MCP server + docs dev mode with hot reload (default)"
+    echo "  ./run.sh --docs       # Start production docs server only"
+    echo "  ./run.sh --mcp        # Start MCP server only"
     echo "  ./run.sh --build      # Build everything without starting"
-    echo "  ./run.sh --dev        # Start docs in development mode"
     echo ""
     echo "Servers:"
     echo "  - MCP Server: Communicates over stdio (stdin/stdout)"
@@ -154,11 +153,11 @@ start_docs_dev() {
     install_docs_deps
 
     log_docs "Starting documentation in development mode..."
-    log_docs "Hot reload enabled at http://localhost:5173"
+    log_docs "Hot reload enabled at http://localhost:${DOCS_PORT}"
     log_docs "Press Ctrl+C to stop."
 
     cd "${DOCS_DIR}"
-    npm run dev -- --port 5173
+    npm run dev -- --port ${DOCS_PORT}
 }
 
 start_mcp_server() {
@@ -214,7 +213,6 @@ BUILD_ONLY=false
 CLEAN_FIRST=false
 DOCS_ONLY=false
 MCP_ONLY=false
-DEV_MODE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -232,10 +230,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --mcp)
             MCP_ONLY=true
-            shift
-            ;;
-        --dev)
-            DEV_MODE=true
             shift
             ;;
         --help|-h)
@@ -261,11 +255,6 @@ if [[ "${BUILD_ONLY}" == "true" ]]; then
     exit 0
 fi
 
-if [[ "${DEV_MODE}" == "true" ]]; then
-    start_docs_dev
-    exit 0
-fi
-
 if [[ "${DOCS_ONLY}" == "true" ]]; then
     start_docs_server
     exit 0
@@ -277,7 +266,40 @@ if [[ "${MCP_ONLY}" == "true" ]]; then
     exit 0
 fi
 
-# Default: build and start both
-build_binary
-build_docs
-start_both_servers
+# Default: start docs dev server with hot reload + MCP server
+start_dev_with_mcp() {
+    # Build MCP binary if needed
+    if [[ ! -f "${BINARY_PATH}" ]]; then
+        log_warn "Binary not found, building first..."
+        build_binary
+    fi
+
+    check_node
+    check_npm
+    install_docs_deps
+
+    log_info "Starting both servers..."
+    log_docs "Documentation (dev mode): http://localhost:${DOCS_PORT}"
+    log_info "MCP Server: stdio"
+    echo ""
+
+    # Start docs dev server in background
+    cd "${DOCS_DIR}"
+    npm run dev -- --port ${DOCS_PORT} &
+    DOCS_PID=$!
+    cd "${SCRIPT_DIR}"
+
+    # Trap to cleanup background process
+    trap "kill $DOCS_PID 2>/dev/null; exit" SIGINT SIGTERM EXIT
+
+    # Give docs server a moment to start
+    sleep 2
+
+    log_docs "Docs dev server running with hot reload (PID: $DOCS_PID)"
+    log_info "Starting MCP server..."
+
+    # Run MCP server in foreground
+    "${BINARY_PATH}"
+}
+
+start_dev_with_mcp

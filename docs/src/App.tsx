@@ -14,10 +14,13 @@ const Configuration = lazy(() => import('./pages/GettingStarted/Configuration'))
 
 // Writing Specs
 const WritingSpecsIndex = lazy(() => import('./pages/WritingSpecs'));
-const Format = lazy(() => import('./pages/WritingSpecs/Format'));
-const Types = lazy(() => import('./pages/WritingSpecs/Types'));
-const Functions = lazy(() => import('./pages/WritingSpecs/Functions'));
-const BestPractices = lazy(() => import('./pages/WritingSpecs/BestPractices'));
+const WritingSpecsExamples = lazy(() => import('./pages/WritingSpecs/Examples'));
+const WritingSpecsBestPractices = lazy(() => import('./pages/WritingSpecs/BestPractices'));
+
+// Importing Specs
+const ImportingSpecsIndex = lazy(() => import('./pages/ImportingSpecs'));
+const ImportingSpecsExamples = lazy(() => import('./pages/ImportingSpecs/Examples'));
+const ImportingSpecsBestPractices = lazy(() => import('./pages/ImportingSpecs/BestPractices'));
 
 // Languages
 const LanguagesIndex = lazy(() => import('./pages/Languages'));
@@ -87,10 +90,13 @@ function App() {
 
               {/* Writing Specs */}
               <Route path="/writing-specs" element={<WritingSpecsIndex />} />
-              <Route path="/writing-specs/format" element={<Format />} />
-              <Route path="/writing-specs/types" element={<Types />} />
-              <Route path="/writing-specs/functions" element={<Functions />} />
-              <Route path="/writing-specs/best-practices" element={<BestPractices />} />
+              <Route path="/writing-specs/examples" element={<WritingSpecsExamples />} />
+              <Route path="/writing-specs/best-practices" element={<WritingSpecsBestPractices />} />
+
+              {/* Importing Specs */}
+              <Route path="/importing-specs" element={<ImportingSpecsIndex />} />
+              <Route path="/importing-specs/examples" element={<ImportingSpecsExamples />} />
+              <Route path="/importing-specs/best-practices" element={<ImportingSpecsBestPractices />} />
 
               {/* Languages */}
               <Route path="/languages" element={<LanguagesIndex />} />

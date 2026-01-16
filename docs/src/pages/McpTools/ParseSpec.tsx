@@ -1,4 +1,55 @@
+import Tabs from '../../components/ui/Tabs';
+
 export default function ParseSpec() {
+  const exampleTabs = [
+    {
+      id: 'conversation',
+      label: 'Conversation',
+      content: (
+        <div className="space-y-4">
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-1">User</div>
+            <p className="text-gray-800 dark:text-gray-200">
+              Can you read my spec file and tell me what functions it defines?
+            </p>
+          </div>
+          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="text-xs text-gray-600 dark:text-gray-400 font-semibold mb-1">Assistant</div>
+            <p className="text-gray-800 dark:text-gray-200 mb-3">
+              I'll parse your specification file to extract its structure.
+            </p>
+            <div className="text-sm bg-gray-100 dark:bg-gray-900 p-3 rounded font-mono text-gray-700 dark:text-gray-300">
+              Using parse_spec with specPath: "./specs/my-project.spec.md"
+            </div>
+            <p className="text-gray-800 dark:text-gray-200 mt-3">
+              Your spec "my-project" defines 3 functions:
+            </p>
+            <ul className="list-disc list-inside text-gray-800 dark:text-gray-200 mt-2">
+              <li><code>createUser</code> - Creates a new user account</li>
+              <li><code>getUser</code> - Retrieves a user by ID</li>
+              <li><code>deleteUser</code> - Removes a user from the system</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'code',
+      label: 'Code',
+      content: (
+        <pre className="code-block">
+{`// Parse a specification file
+const result = await mcp.callTool('rpg', 'parse_spec', {
+  specPath: './specs/my-project.spec.md'
+});
+
+console.log(result.name);        // "my-project"
+console.log(result.functions);   // Array of function definitions`}
+        </pre>
+      ),
+    },
+  ];
+
   return (
     <div className="prose-docs">
       <h1>parse_spec</h1>
@@ -51,15 +102,7 @@ export default function ParseSpec() {
       </pre>
 
       <h2>Example Usage</h2>
-      <pre className="code-block">
-{`// Parse a specification file
-const result = await mcp.callTool('rpg', 'parse_spec', {
-  specPath: './specs/my-project.spec.md'
-});
-
-console.log(result.name);        // "my-project"
-console.log(result.functions);   // Array of function definitions`}
-      </pre>
+      <Tabs tabs={exampleTabs} defaultTab="conversation" />
 
       <h2>Spec Sections</h2>
       <p>The parser extracts these markdown sections (case-insensitive):</p>

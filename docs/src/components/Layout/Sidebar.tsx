@@ -22,10 +22,16 @@ const navigation: NavItem[] = [
     title: 'Writing Specs',
     items: [
       { title: 'Overview', href: '/writing-specs' },
-      { title: 'Spec Format', href: '/writing-specs/format' },
-      { title: 'Type System', href: '/writing-specs/types' },
-      { title: 'Functions', href: '/writing-specs/functions' },
+      { title: 'Examples', href: '/writing-specs/examples' },
       { title: 'Best Practices', href: '/writing-specs/best-practices' },
+    ],
+  },
+  {
+    title: 'Importing Specs',
+    items: [
+      { title: 'Overview', href: '/importing-specs' },
+      { title: 'Examples', href: '/importing-specs/examples' },
+      { title: 'Best Practices', href: '/importing-specs/best-practices' },
     ],
   },
   {

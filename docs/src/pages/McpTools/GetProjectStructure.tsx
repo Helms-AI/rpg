@@ -1,4 +1,63 @@
+import Tabs from '../../components/ui/Tabs';
+
 export default function GetProjectStructure() {
+  const exampleTabs = [
+    {
+      id: 'conversation',
+      label: 'Conversation',
+      content: (
+        <div className="space-y-4">
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-1">User</div>
+            <p className="text-gray-800 dark:text-gray-200">
+              What's the recommended project structure for a Rust project called "url-shortener"?
+            </p>
+          </div>
+          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="text-xs text-gray-600 dark:text-gray-400 font-semibold mb-1">Assistant</div>
+            <p className="text-gray-800 dark:text-gray-200 mb-3">
+              I'll get the idiomatic Rust project structure for you.
+            </p>
+            <div className="text-sm bg-gray-100 dark:bg-gray-900 p-3 rounded font-mono text-gray-700 dark:text-gray-300">
+              Using get_project_structure with projectName: "url-shortener", language: "rust"
+            </div>
+            <p className="text-gray-800 dark:text-gray-200 mt-3">
+              Here's the recommended structure for your Rust project:
+            </p>
+            <pre className="text-sm bg-gray-100 dark:bg-gray-900 p-3 rounded font-mono text-gray-700 dark:text-gray-300 mt-2">
+{`url-shortener/
+├── src/
+│   ├── lib.rs          # Library entry point
+│   └── main.rs         # Binary entry point
+├── tests/
+│   └── integration.rs  # Integration tests
+├── Cargo.toml          # Package manifest
+└── README.md           # Documentation`}
+            </pre>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'code',
+      label: 'Code',
+      content: (
+        <pre className="code-block">
+{`// Get structure for a Rust project
+const structure = await mcp.callTool('rpg', 'get_project_structure', {
+  projectName: 'url-shortener',
+  language: 'rust'
+});
+
+// Create the files
+for (const file of structure.files) {
+  console.log(\`Create: \${file.path} - \${file.purpose}\`);
+}`}
+        </pre>
+      ),
+    },
+  ];
+
   return (
     <div className="prose-docs">
       <h1>get_project_structure</h1>
@@ -65,18 +124,7 @@ export default function GetProjectStructure() {
       </pre>
 
       <h2>Example Usage</h2>
-      <pre className="code-block">
-{`// Get structure for a Rust project
-const structure = await mcp.callTool('rpg', 'get_project_structure', {
-  projectName: 'url-shortener',
-  language: 'rust'
-});
-
-// Create the files
-for (const file of structure.files) {
-  console.log(\`Create: \${file.path} - \${file.purpose}\`);
-}`}
-      </pre>
+      <Tabs tabs={exampleTabs} defaultTab="conversation" />
 
       <h2>Language-Specific Patterns</h2>
       <ul>
