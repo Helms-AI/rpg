@@ -35,5 +35,5 @@ output/
 input/
 test_importer.go
 
-# Specs generated during testing (keep manual specs)
-specs/*-imported.spec.md
+# Specs directory
+specs/
