@@ -84,10 +84,17 @@ Options:
 | `get_project_structure` | Get recommended file structure for a spec in a target language |
 | `ensure_parity` | Compare implementations across languages and generate fix instructions for gaps |
 | `import_spec_from_source` | Analyze existing source code for AI-powered spec generation |
+| `import_spec_from_github` | Clone a GitHub repo and analyze for spec generation |
 
 ### Tool Usage Examples
 
-**Import spec from existing code:**
+**Import spec from GitHub repository:**
+```
+Use rpg import_spec_from_github on owner/repo to analyze it for spec generation
+Use rpg import_spec_from_github on https://github.com/owner/repo@main
+```
+
+**Import spec from local code:**
 ```
 Use rpg import_spec_from_source on ./my-java-project to analyze it for spec generation
 ```
@@ -118,25 +125,39 @@ Your Code           RPG Analysis          AI Generation        Multi-Language
     │                    │                     │                     │
     ├── src/*       ────►│                     │                     │
     ├── tests/*     ────►│ import_spec_from   │ Creates natural    │ Go
-    ├── config      ────►│ _source        ───►│ language spec  ───►│ Rust
+    ├── config      ────►│ _source/_github ──►│ language spec  ───►│ Rust
     └── README      ────►│                     │                     │ TypeScript
                          └── Analysis Prompt ──┘                     └─ Python...
 ```
 
 ### Quick Start
 
+**From GitHub repository:**
 ```bash
-# 1. Import existing project
+# Import directly from GitHub (supports owner/repo shorthand)
+Use rpg import_spec_from_github on owner/repo
+
+# With specific branch
+Use rpg import_spec_from_github on owner/repo@main
+
+# Full URL also works
+Use rpg import_spec_from_github on https://github.com/owner/repo
+```
+
+**From local directory:**
+```bash
+# Import from local path
 Use rpg import_spec_from_source on ./legacy-api
+```
 
-# 2. AI generates spec (review and refine as needed)
-# Creates natural language spec describing the behavior
+**After importing:**
+```bash
+# AI generates spec (review and refine as needed)
+# Then generate in new languages
+Use rpg get_generation_context for ./specs/my-project.spec.md in go
+Use rpg get_generation_context for ./specs/my-project.spec.md in rust
 
-# 3. Generate in new languages
-Use rpg get_generation_context for ./specs/legacy-api.spec.md in go
-Use rpg get_generation_context for ./specs/legacy-api.spec.md in rust
-
-# 4. Verify parity
+# Verify parity
 Use rpg ensure_parity to compare implementations
 ```
 
@@ -149,6 +170,16 @@ Use rpg ensure_parity to compare implementations
 | Config files | Dependencies, environment variables |
 | Documentation | README, comments provide context |
 | API specs | OpenAPI/GraphQL schemas if present |
+
+### import_spec_from_github Tool
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `repository` | Yes | GitHub URL or shorthand (`owner/repo`, `owner/repo@branch`) |
+| `ref` | No | Branch, tag, or commit SHA (overrides ref in URL) |
+| `token` | No | GitHub PAT for private repos (or use `GITHUB_TOKEN` env var) |
+| `name` | No | Optional name for the spec |
+| `shallow` | No | Use shallow clone (default: true) |
 
 ### import_spec_from_source Tool
 

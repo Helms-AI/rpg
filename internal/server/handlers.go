@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kon1790/rpg/internal/github"
 	"github.com/kon1790/rpg/internal/importer"
 	"github.com/kon1790/rpg/internal/languages"
 	"github.com/kon1790/rpg/internal/parser"
@@ -130,6 +131,32 @@ type ImportSpecFromSourceInput struct {
 // ImportSpecFromSourceOutput contains the analysis prompt and file statistics for AI-powered spec generation
 type ImportSpecFromSourceOutput struct {
 	ProjectName      string `json:"projectName"`
+	DetectedLanguage string `json:"detectedLanguage"`
+	SourceFileCount  int    `json:"sourceFileCount"`
+	TestFileCount    int    `json:"testFileCount"`
+	APISpecCount     int    `json:"apiSpecCount"`
+	ConfigFileCount  int    `json:"configFileCount"`
+	DocFileCount     int    `json:"docFileCount"`
+	TotalContentSize int    `json:"totalContentSize"`
+	AnalysisPrompt   string `json:"analysisPrompt"`
+	SpecOutputPath   string `json:"specOutputPath"`
+}
+
+// ImportSpecFromGitHubInput contains parameters for importing a spec from a GitHub repository
+type ImportSpecFromGitHubInput struct {
+	Repository string `json:"repository" jsonschema:"required" jsonschema_description:"GitHub repository URL or shorthand (e.g., 'owner/repo', 'https://github.com/owner/repo', 'owner/repo@branch')"`
+	Ref        string `json:"ref,omitempty" jsonschema_description:"Optional branch, tag, or commit SHA to checkout (overrides ref in URL)"`
+	Token      string `json:"token,omitempty" jsonschema_description:"Optional GitHub personal access token for private repos (uses GITHUB_TOKEN env var if not provided)"`
+	Name       string `json:"name,omitempty" jsonschema_description:"Optional name for the generated spec (defaults to repository name)"`
+	Shallow    *bool  `json:"shallow,omitempty" jsonschema_description:"Use shallow clone for faster operation (default: true)"`
+}
+
+// ImportSpecFromGitHubOutput contains the analysis prompt and repository information for AI-powered spec generation
+type ImportSpecFromGitHubOutput struct {
+	ProjectName      string `json:"projectName"`
+	Repository       string `json:"repository"`
+	Branch           string `json:"branch"`
+	CommitSHA        string `json:"commitSha"`
 	DetectedLanguage string `json:"detectedLanguage"`
 	SourceFileCount  int    `json:"sourceFileCount"`
 	TestFileCount    int    `json:"testFileCount"`
@@ -315,6 +342,108 @@ func (s *Server) handleImportSpecFromSource(ctx context.Context, req *mcp.CallTo
 
 	return nil, ImportSpecFromSourceOutput{
 		ProjectName:      files.Name,
+		DetectedLanguage: files.Language,
+		SourceFileCount:  len(files.SourceFiles),
+		TestFileCount:    len(files.TestFiles),
+		APISpecCount:     len(files.APISpecs),
+		ConfigFileCount:  len(files.ConfigFiles),
+		DocFileCount:     len(files.DocFiles),
+		TotalContentSize: files.GetTotalContentSize(),
+		AnalysisPrompt:   analysisPrompt,
+		SpecOutputPath:   specPath,
+	}, nil
+}
+
+func (s *Server) handleImportSpecFromGitHub(ctx context.Context, req *mcp.CallToolRequest, input ImportSpecFromGitHubInput) (*mcp.CallToolResult, ImportSpecFromGitHubOutput, error) {
+	// Parse the repository URL/shorthand
+	repoInfo, err := github.ParseRepository(input.Repository)
+	if err != nil {
+		return &mcp.CallToolResult{
+			IsError: true,
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: fmt.Sprintf("Invalid repository: %v", err)},
+			},
+		}, ImportSpecFromGitHubOutput{}, nil
+	}
+
+	// Override ref if provided as separate parameter
+	if input.Ref != "" {
+		repoInfo.Ref = input.Ref
+	}
+
+	// Create cloner with settings
+	cloner := github.NewCloner()
+	cloner.Token = input.Token
+
+	// Handle shallow clone setting (default true)
+	if input.Shallow != nil {
+		cloner.Shallow = *input.Shallow
+	}
+
+	// Clone the repository
+	cloneResult, err := cloner.Clone(repoInfo)
+	if err != nil {
+		return &mcp.CallToolResult{
+			IsError: true,
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: fmt.Sprintf("Failed to clone repository: %v", err)},
+			},
+		}, ImportSpecFromGitHubOutput{}, nil
+	}
+
+	// Ensure cleanup of temp directory
+	defer github.Cleanup(cloneResult.LocalPath)
+
+	// Collect all project files using existing import logic
+	files, err := importer.CollectProjectFiles(cloneResult.LocalPath)
+	if err != nil {
+		return &mcp.CallToolResult{
+			IsError: true,
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: fmt.Sprintf("Failed to collect project files: %v", err)},
+			},
+		}, ImportSpecFromGitHubOutput{}, nil
+	}
+
+	// Override name if provided, otherwise use repo name
+	if input.Name != "" {
+		files.Name = input.Name
+	} else {
+		files.Name = repoInfo.Name
+	}
+
+	// Check if any files were found
+	if files.GetTotalFileCount() == 0 {
+		return &mcp.CallToolResult{
+			IsError: true,
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: fmt.Sprintf("No source files found in repository: %s/%s", repoInfo.Owner, repoInfo.Name)},
+			},
+		}, ImportSpecFromGitHubOutput{}, nil
+	}
+
+	// Build the analysis prompt for AI
+	analysisPrompt := importer.BuildAnalysisPrompt(files)
+
+	// Determine the spec output path
+	specsDir := "specs"
+	specPath := filepath.Join(specsDir, files.Name+".spec.md")
+
+	// Create specs directory if needed (for later use by AI)
+	if err := os.MkdirAll(specsDir, 0755); err != nil {
+		return &mcp.CallToolResult{
+			IsError: true,
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: fmt.Sprintf("Failed to create specs directory: %v", err)},
+			},
+		}, ImportSpecFromGitHubOutput{}, nil
+	}
+
+	return nil, ImportSpecFromGitHubOutput{
+		ProjectName:      files.Name,
+		Repository:       fmt.Sprintf("%s/%s", repoInfo.Owner, repoInfo.Name),
+		Branch:           cloneResult.Branch,
+		CommitSHA:        cloneResult.CommitSHA,
 		DetectedLanguage: files.Language,
 		SourceFileCount:  len(files.SourceFiles),
 		TestFileCount:    len(files.TestFiles),

@@ -103,6 +103,12 @@ func (s *Server) registerTools() {
 		Name:        "import_spec_from_source",
 		Description: "Collect and analyze source code from any directory for AI-powered spec generation. Returns an analysis prompt containing all source files, tests, API specs, and configurations. The AI should use this prompt to generate a comprehensive .spec.md file at the specified output path.",
 	}, s.handleImportSpecFromSource)
+
+	// Tool: import_spec_from_github
+	mcp.AddTool(s.mcpServer, &mcp.Tool{
+		Name:        "import_spec_from_github",
+		Description: "Clone a GitHub repository and analyze its source code for AI-powered spec generation. Accepts repository URLs or shorthand (e.g., 'owner/repo', 'owner/repo@branch'). Returns an analysis prompt for generating a comprehensive .spec.md file. Supports private repos via GITHUB_TOKEN environment variable or token parameter.",
+	}, s.handleImportSpecFromGitHub)
 }
 
 // registerResources registers all MCP resources.
