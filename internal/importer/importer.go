@@ -9,6 +9,117 @@ import (
 	"github.com/kon1790/rpg/internal/importer/extractors"
 )
 
+// BuildAnalysisPrompt creates a comprehensive prompt for AI analysis of a project
+func BuildAnalysisPrompt(files *ProjectFiles) string {
+	var sb strings.Builder
+
+	sb.WriteString("# Source Code Analysis Task\n\n")
+	sb.WriteString("Analyze the following project and generate a comprehensive .spec.md file.\n\n")
+	sb.WriteString(fmt.Sprintf("## Project: %s\n", files.Name))
+	sb.WriteString(fmt.Sprintf("## Detected Language: %s\n", files.Language))
+	sb.WriteString(fmt.Sprintf("## Total Files: %d\n\n", files.GetTotalFileCount()))
+
+	// Source Files
+	if len(files.SourceFiles) > 0 {
+		sb.WriteString("---\n\n## Source Files\n\n")
+		for _, f := range files.SourceFiles {
+			sb.WriteString(fmt.Sprintf("### FILE: %s\n", f.Path))
+			sb.WriteString("```\n")
+			sb.WriteString(f.Content)
+			sb.WriteString("\n```\n\n")
+		}
+	}
+
+	// Test Files
+	if len(files.TestFiles) > 0 {
+		sb.WriteString("---\n\n## Test Files\n\n")
+		for _, f := range files.TestFiles {
+			sb.WriteString(fmt.Sprintf("### FILE: %s\n", f.Path))
+			sb.WriteString("```\n")
+			sb.WriteString(f.Content)
+			sb.WriteString("\n```\n\n")
+		}
+	}
+
+	// API Specifications
+	if len(files.APISpecs) > 0 {
+		sb.WriteString("---\n\n## API Specifications\n\n")
+		for _, f := range files.APISpecs {
+			sb.WriteString(fmt.Sprintf("### FILE: %s\n", f.Path))
+			sb.WriteString("```\n")
+			sb.WriteString(f.Content)
+			sb.WriteString("\n```\n\n")
+		}
+	}
+
+	// Configuration Files
+	if len(files.ConfigFiles) > 0 {
+		sb.WriteString("---\n\n## Configuration Files\n\n")
+		for _, f := range files.ConfigFiles {
+			sb.WriteString(fmt.Sprintf("### FILE: %s\n", f.Path))
+			sb.WriteString("```\n")
+			sb.WriteString(f.Content)
+			sb.WriteString("\n```\n\n")
+		}
+	}
+
+	// Documentation Files
+	if len(files.DocFiles) > 0 {
+		sb.WriteString("---\n\n## Documentation Files\n\n")
+		for _, f := range files.DocFiles {
+			sb.WriteString(fmt.Sprintf("### FILE: %s\n", f.Path))
+			sb.WriteString("```\n")
+			sb.WriteString(f.Content)
+			sb.WriteString("\n```\n\n")
+		}
+	}
+
+	// Instructions for AI
+	sb.WriteString("---\n\n## Instructions\n\n")
+	sb.WriteString("Generate a complete .spec.md file that:\n\n")
+	sb.WriteString("1. **Captures ALL types** - structs, classes, interfaces, enums with:\n")
+	sb.WriteString("   - Field names and types\n")
+	sb.WriteString("   - Optional/required status\n")
+	sb.WriteString("   - Inheritance relationships\n")
+	sb.WriteString("   - Generic type parameters\n\n")
+	sb.WriteString("2. **Documents ALL functions** with:\n")
+	sb.WriteString("   - Clear description of what it does\n")
+	sb.WriteString("   - All parameters with types and defaults\n")
+	sb.WriteString("   - Return type\n")
+	sb.WriteString("   - Detailed logic as pseudo-code (step-by-step what the function does)\n")
+	sb.WriteString("   - Error conditions\n")
+	sb.WriteString("   - Whether it's async\n\n")
+	sb.WriteString("3. **Extracts ALL tests** with:\n")
+	sb.WriteString("   - Test name\n")
+	sb.WriteString("   - Given inputs (actual values from test)\n")
+	sb.WriteString("   - Expected outputs (actual values from test)\n")
+	sb.WriteString("   - Any setup/mock requirements\n\n")
+	sb.WriteString("4. **Includes API endpoints** (from OpenAPI/code):\n")
+	sb.WriteString("   - HTTP method and path\n")
+	sb.WriteString("   - Request parameters and body\n")
+	sb.WriteString("   - Response types\n")
+	sb.WriteString("   - Error responses\n\n")
+	sb.WriteString("5. **Documents configuration**:\n")
+	sb.WriteString("   - Environment variables with defaults\n")
+	sb.WriteString("   - Config file settings\n")
+	sb.WriteString("   - Required vs optional settings\n\n")
+	sb.WriteString("6. **Lists dependencies**:\n")
+	sb.WriteString("   - External packages\n")
+	sb.WriteString("   - Framework detection\n\n")
+	sb.WriteString("## Output Format\n\n")
+	sb.WriteString("Return ONLY the .spec.md content in the standard format:\n")
+	sb.WriteString("- # Project Name\n")
+	sb.WriteString("- Description\n")
+	sb.WriteString("- ## Target Languages\n")
+	sb.WriteString("- ## Configuration (if applicable)\n")
+	sb.WriteString("- ## Types\n")
+	sb.WriteString("- ## Functions (with full logic blocks)\n")
+	sb.WriteString("- ## Tests (with given/expect values)\n")
+	sb.WriteString("- ## Dependencies\n")
+
+	return sb.String()
+}
+
 // Re-export types from extractors package for backward compatibility
 type ExtractedProject = extractors.ExtractedProject
 type ExtractedType = extractors.ExtractedType

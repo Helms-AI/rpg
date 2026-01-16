@@ -102,7 +102,7 @@ func (s *Server) registerTools() {
 	// Tool: import_spec_from_source
 	mcp.AddTool(s.mcpServer, &mcp.Tool{
 		Name:        "import_spec_from_source",
-		Description: "Import source code from a directory and generate a .spec.md file. Analyzes code in input/<project>/ and outputs to specs/. Auto-detects language from file extensions.",
+		Description: "Collect and analyze source code from any directory for AI-powered spec generation. Returns an analysis prompt containing all source files, tests, API specs, and configurations. The AI should use this prompt to generate a comprehensive .spec.md file at the specified output path.",
 	}, s.handleImportSpecFromSource)
 }
 

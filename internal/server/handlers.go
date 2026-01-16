@@ -127,14 +127,18 @@ type ImportSpecFromSourceInput struct {
 	Name      string `json:"name,omitempty" jsonschema_description:"Optional name for the generated spec (defaults to the input directory name)"`
 }
 
-// ImportSpecFromSourceOutput contains the generated spec path and details
+// ImportSpecFromSourceOutput contains the analysis prompt and file statistics for AI-powered spec generation
 type ImportSpecFromSourceOutput struct {
-	SpecPath           string   `json:"specPath"`
-	DetectedLanguage   string   `json:"detectedLanguage"`
-	TypesExtracted     int      `json:"typesExtracted"`
-	FunctionsExtracted int      `json:"functionsExtracted"`
-	TestsExtracted     int      `json:"testsExtracted"`
-	Warnings           []string `json:"warnings,omitempty"`
+	ProjectName      string `json:"projectName"`
+	DetectedLanguage string `json:"detectedLanguage"`
+	SourceFileCount  int    `json:"sourceFileCount"`
+	TestFileCount    int    `json:"testFileCount"`
+	APISpecCount     int    `json:"apiSpecCount"`
+	ConfigFileCount  int    `json:"configFileCount"`
+	DocFileCount     int    `json:"docFileCount"`
+	TotalContentSize int    `json:"totalContentSize"`
+	AnalysisPrompt   string `json:"analysisPrompt"`
+	SpecOutputPath   string `json:"specOutputPath"`
 }
 
 // Tool handlers
@@ -319,48 +323,40 @@ func (s *Server) handleImportSpecFromSource(ctx context.Context, req *mcp.CallTo
 		}, ImportSpecFromSourceOutput{}, nil
 	}
 
-	// Create importer
-	imp := importer.New()
-
-	// Detect language
-	language, err := imp.DetectLanguage(inputPath)
+	// Collect all project files using the new AI-powered approach
+	files, err := importer.CollectProjectFiles(inputPath)
 	if err != nil {
 		return &mcp.CallToolResult{
 			IsError: true,
 			Content: []mcp.Content{
-				&mcp.TextContent{Text: fmt.Sprintf("Could not detect language: %v", err)},
-			},
-		}, ImportSpecFromSourceOutput{}, nil
-	}
-
-	// Extract project information
-	project, err := imp.Extract(inputPath, language)
-	if err != nil {
-		return &mcp.CallToolResult{
-			IsError: true,
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: fmt.Sprintf("Extraction failed: %v", err)},
+				&mcp.TextContent{Text: fmt.Sprintf("Failed to collect project files: %v", err)},
 			},
 		}, ImportSpecFromSourceOutput{}, nil
 	}
 
 	// Override name if provided
 	if input.Name != "" {
-		project.Name = input.Name
+		files.Name = input.Name
 	}
 
-	// Generate spec markdown
-	specContent := imp.GenerateSpec(project)
+	// Check if any files were found
+	if files.GetTotalFileCount() == 0 {
+		return &mcp.CallToolResult{
+			IsError: true,
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: fmt.Sprintf("No source files found in: %s", inputPath)},
+			},
+		}, ImportSpecFromSourceOutput{}, nil
+	}
 
-	// Determine output path (specs directory in current working dir)
+	// Build the analysis prompt for AI
+	analysisPrompt := importer.BuildAnalysisPrompt(files)
+
+	// Determine the spec output path
 	specsDir := "specs"
-	specPath := filepath.Join(specsDir, project.Name+".spec.md")
-	if _, err := os.Stat(specPath); err == nil {
-		// File exists, add -imported suffix
-		specPath = filepath.Join(specsDir, project.Name+"-imported.spec.md")
-	}
+	specPath := filepath.Join(specsDir, files.Name+".spec.md")
 
-	// Create specs directory if needed
+	// Create specs directory if needed (for later use by AI)
 	if err := os.MkdirAll(specsDir, 0755); err != nil {
 		return &mcp.CallToolResult{
 			IsError: true,
@@ -370,29 +366,17 @@ func (s *Server) handleImportSpecFromSource(ctx context.Context, req *mcp.CallTo
 		}, ImportSpecFromSourceOutput{}, nil
 	}
 
-	// Write spec file
-	if err := os.WriteFile(specPath, []byte(specContent), 0644); err != nil {
-		return &mcp.CallToolResult{
-			IsError: true,
-			Content: []mcp.Content{
-				&mcp.TextContent{Text: fmt.Sprintf("Failed to write spec file: %v", err)},
-			},
-		}, ImportSpecFromSourceOutput{}, nil
-	}
-
-	// Ensure warnings is not nil for proper JSON serialization
-	warnings := project.Warnings
-	if warnings == nil {
-		warnings = []string{}
-	}
-
 	return nil, ImportSpecFromSourceOutput{
-		SpecPath:           specPath,
-		DetectedLanguage:   language,
-		TypesExtracted:     len(project.Types),
-		FunctionsExtracted: len(project.Functions),
-		TestsExtracted:     len(project.Tests),
-		Warnings:           warnings,
+		ProjectName:      files.Name,
+		DetectedLanguage: files.Language,
+		SourceFileCount:  len(files.SourceFiles),
+		TestFileCount:    len(files.TestFiles),
+		APISpecCount:     len(files.APISpecs),
+		ConfigFileCount:  len(files.ConfigFiles),
+		DocFileCount:     len(files.DocFiles),
+		TotalContentSize: files.GetTotalContentSize(),
+		AnalysisPrompt:   analysisPrompt,
+		SpecOutputPath:   specPath,
 	}, nil
 }
 
