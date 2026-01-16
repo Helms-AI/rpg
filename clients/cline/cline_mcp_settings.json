@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "rpg": {
+      "command": "./bin/rpg",
+      "args": ["--output", "./generated"],
+      "disabled": false,
+      "alwaysAllow": [
+        "list_languages",
+        "parse_spec",
+        "validate_spec"
+      ]
+    }
+  }
+}

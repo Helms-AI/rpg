@@ -1,0 +1,17 @@
+{
+  "assistant": {
+    "version": "2",
+    "default_model": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-20250514"
+    }
+  },
+  "context_servers": {
+    "rpg": {
+      "command": {
+        "path": "./bin/rpg",
+        "args": ["--output", "./generated"]
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "rpg": {
+      "command": "${RPG_BINARY_PATH}",
+      "args": ["--output", "${RPG_OUTPUT_DIR:-./generated}"],
+      "env": {},
+      "alwaysAllow": [
+        "list_languages",
+        "parse_spec",
+        "validate_spec",
+        "get_generation_context",
+        "get_project_structure"
+      ]
+    }
+  }
+}

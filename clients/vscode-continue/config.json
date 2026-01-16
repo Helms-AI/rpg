@@ -1,0 +1,16 @@
+{
+  "models": [],
+  "mcpServers": [
+    {
+      "name": "rpg",
+      "command": "${workspaceFolder}/bin/rpg",
+      "args": ["--output", "${workspaceFolder}/generated"]
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Starcoder2 3b",
+    "provider": "ollama",
+    "model": "starcoder2:3b"
+  },
+  "allowAnonymousTelemetry": false
+}
