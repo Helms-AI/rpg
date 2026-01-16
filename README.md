@@ -83,186 +83,167 @@ Options:
 | `get_generation_context` | Get full context for code generation including spec, language conventions, and prompt template |
 | `get_project_structure` | Get recommended file structure for a spec in a target language |
 | `ensure_parity` | Compare implementations across languages and generate fix instructions for gaps |
+| `import_spec_from_source` | Analyze existing source code for AI-powered spec generation |
 
 ### Tool Usage Examples
 
+**Import spec from existing code:**
+```
+Use rpg import_spec_from_source on ./my-java-project to analyze it for spec generation
+```
+
 **Get generation context for a spec:**
 ```
-Use rpg to get the generation context for examples/fullstack-app.spec.md in csharp
+Use rpg get_generation_context for examples/my-api.spec.md in typescript
 ```
 
 **Generate in multiple languages:**
 ```
-Generate the slugify spec in all available languages
+Generate the slugify spec in go, rust, and python
 ```
 
 **Check parity across implementations:**
 ```
-Use rpg ensure_parity to compare the csharp and java implementations in output/bookmark-manager/
+Use rpg ensure_parity to compare the go and typescript implementations
 ```
 
-## MCP Resources
+## Importing Specs from Existing Code
 
-| Resource URI | Description |
-|--------------|-------------|
-| `spec://examples/simple-function` | Example: simple utility function |
-| `spec://examples/module` | Example: module with types and validation |
-| `spec://examples/full-project` | Example: complete REST API project |
-| `lang://go/conventions` | Go language conventions |
-| `lang://rust/conventions` | Rust language conventions |
-| `lang://java/conventions` | Java language conventions |
-| `lang://csharp/conventions` | C# language conventions |
-| `lang://python/conventions` | Python language conventions |
-| `lang://typescript/conventions` | TypeScript language conventions |
+Have existing code? Let RPG reverse-engineer it into a spec for multi-language generation.
 
-## Writing Spec Files
+### The Import Workflow
 
-rpg supports two spec styles: **explicit** (structured pseudo-code) and **flexible** (natural language descriptions).
+```
+Your Code           RPG Analysis          AI Generation        Multi-Language
+    │                    │                     │                     │
+    ├── src/*       ────►│                     │                     │
+    ├── tests/*     ────►│ import_spec_from   │ Creates natural    │ Go
+    ├── config      ────►│ _source        ───►│ language spec  ───►│ Rust
+    └── README      ────►│                     │                     │ TypeScript
+                         └── Analysis Prompt ──┘                     └─ Python...
+```
 
-### Explicit Style
+### Quick Start
 
-Best for utility functions, libraries, and well-defined APIs:
+```bash
+# 1. Import existing project
+Use rpg import_spec_from_source on ./legacy-api
 
+# 2. AI generates spec (review and refine as needed)
+# Creates natural language spec describing the behavior
+
+# 3. Generate in new languages
+Use rpg get_generation_context for ./specs/legacy-api.spec.md in go
+Use rpg get_generation_context for ./specs/legacy-api.spec.md in rust
+
+# 4. Verify parity
+Use rpg ensure_parity to compare implementations
+```
+
+### What Gets Analyzed
+
+| File Type | What It Reveals |
+|-----------|-----------------|
+| Source files | Functions, types, classes, business logic |
+| Test files | Expected behavior, edge cases, usage examples |
+| Config files | Dependencies, environment variables |
+| Documentation | README, comments provide context |
+| API specs | OpenAPI/GraphQL schemas if present |
+
+### import_spec_from_source Tool
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `inputPath` | Yes | Path to source code directory |
+| `name` | No | Optional name for the spec |
+
+**Returns**: Analysis prompt for AI-powered spec generation
+
+> **Note**: This is AI-assisted, not automatic. Review generated specs for accuracy and enhance with context the code doesn't capture.
+
+## Writing Specs from Scratch
+
+RPG specs are **natural language markdown**. Describe what you want—the AI interprets your intent.
+
+### No Format Rules
+
+The AI adapts to your style. All of these work:
+
+**Minimal:**
 ```markdown
-# slugify
+# url-shortener
+A service that shortens URLs and redirects them.
+Store mappings in memory.
+```
 
-A utility function to convert text into URL-friendly slugs.
-
-## Target Languages
-
-- go
-- python
-- typescript
+**Structured:**
+```markdown
+# url-shortener
 
 ## Functions
+### shorten(url: string): string
+Takes a long URL and returns a 6-character code.
 
-### slugify
-
-Converts a string into a URL-friendly slug.
-
-**accepts:**
-- text: Text
-- separator: Text (defaults to "-")
-
-**returns:** Text
-
-**logic:**
-```
-convert text to lowercase
-replace all whitespace with the separator
-remove all characters that are not letters, numbers, or the separator
-collapse multiple consecutive separators into one
-trim separators from start and end
-return the result
+### resolve(code: string): string
+Returns the original URL for a code, or throws if not found.
 ```
 
-## Tests
-
-### slugify
-
-#### test: converts simple text
-given: "Hello World"
-expect: "hello-world"
-
-#### test: handles special characters
-given: "Hello, World! How are you?"
-expect: "hello-world-how-are-you"
-```
-
-### Flexible Style
-
-Best for fullstack applications and complex systems:
-
+**Conversational:**
 ```markdown
-# bookmark-manager
-
-A personal bookmark manager with tagging, full-text search, and metadata extraction.
-
-## Overview
-
-This is a self-hosted web application for saving bookmarks. When a user saves a URL,
-the system automatically fetches the page title, description, and favicon.
-
-## Target Languages
-
-- csharp
-- java
-- typescript
-
-## Architecture
-
-Traditional fullstack web application with REST API backend and SPA frontend.
-
-### Backend
-- REST API for bookmark CRUD
-- Background metadata fetching
-- SQLite with FTS5 for search
-
-### Frontend
-- Simple SPA, no build step
-- Searchable bookmark list
-- Tag filtering sidebar
-
-## Data Model
-
-### Bookmark
-- `id` - unique identifier
-- `url` - the saved URL (required, valid URL)
-- `title` - page title (auto-fetched)
-- `tags` - list of associated tags
-- `created_at` - timestamp
-
-## API Design
-
-```
-GET    /api/bookmarks          - list bookmarks (?q=search&tag=filter)
-POST   /api/bookmarks          - create bookmark
-DELETE /api/bookmarks/:id      - delete bookmark
+# url-shortener
+I need a URL shortening service like bit.ly. When someone gives us a long URL,
+we generate a short code. Later they can use that code to get redirected.
+Keep it simple - just store everything in memory for now.
 ```
 
-## Key Behaviors
+### Quick Start
 
-### Adding a Bookmark
-1. Immediately create bookmark with URL
-2. Return success (optimistic UI)
-3. Background fetch metadata
-4. Update bookmark with title, description
+```bash
+# 1. Write your spec (any style)
+cat > my-api.spec.md << 'EOF'
+# my-api
+A REST API for managing tasks. Users can create, list, and complete tasks.
+Use SQLite for storage.
+EOF
 
-## Configuration
-
-Environment variables:
-- `PORT` - HTTP port (default: 3000)
-- `DATABASE_PATH` - SQLite location (default: ./data/bookmarks.db)
+# 2. Generate in any language
+Use rpg get_generation_context for my-api.spec.md in typescript
 ```
 
-### Spec Sections Reference
+### Common Patterns (All Optional)
 
-| Section | Required | Description |
-|---------|----------|-------------|
-| `# Name` | Yes | Project/function name (H1 heading) |
-| `## Target Languages` | Yes | List of target language IDs |
-| `## Overview` | No | High-level description |
-| `## Architecture` | No | System design and components |
-| `## Types` | No | Data structures and enums |
-| `## Functions` | No | Function signatures and logic |
-| `## Data Model` | No | Database entities |
-| `## API Design` | No | REST/GraphQL endpoints |
-| `## Tests` | No | Test cases with given/expect |
-| `## Configuration` | No | Environment variables and settings |
+| Section | Purpose |
+|---------|---------|
+| `## Types` | Define data structures |
+| `## Functions` | Describe behavior, inputs, outputs |
+| `## API Endpoints` | REST routes or GraphQL operations |
+| `## Configuration` | Environment variables and defaults |
+| `## Tests` | Given/expect scenarios |
 
-### Pseudo-Code Types
+### The Key: Describe Intent, Not Implementation
+
+| ❌ Too Specific | ✅ Intent-Focused |
+|-----------------|-------------------|
+| "Use a HashMap<String, User>" | "Store users by ID for quick lookup" |
+| "Iterate with a for loop and filter" | "Filter users matching criteria" |
+| "Return an ArrayList" | "Return matching users as a list" |
+
+The AI chooses idiomatic implementations for each target language.
+
+### Portable Types
+
+Use these generic types—the AI maps them to language-specific types:
 
 | Type | Maps To |
 |------|---------|
-| `Text`, `String` | string types |
-| `Integer`, `Int`, `Number` | integer types |
-| `Float`, `Decimal` | floating point |
-| `Boolean`, `Bool` | boolean |
-| `Timestamp` | datetime types |
-| `UUID` | string (UUID format) |
-| `List of X` | array/slice of X |
-| `Optional X` | nullable X |
-| `Result of X` | result type with error |
+| `string`, `text` | String types |
+| `int`, `integer` | Integer types |
+| `float`, `decimal` | Floating point |
+| `bool`, `boolean` | Boolean |
+| `timestamp`, `datetime` | Date/time types |
+| `uuid` | UUID/GUID |
+| `list of X` | Array/slice of X |
+| `optional X` | Nullable X |
 
 ## Supported Languages
 
