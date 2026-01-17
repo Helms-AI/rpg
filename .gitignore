@@ -34,6 +34,7 @@ Thumbs.db
 output/
 input/
 test_importer.go
+generated/
 
 # Specs directory
 specs/
