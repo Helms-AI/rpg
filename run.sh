@@ -28,19 +28,19 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 log_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+    echo -e "${GREEN}[INFO]${NC} $1" >&2
 }
 
 log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+    echo -e "${YELLOW}[WARN]${NC} $1" >&2
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}[ERROR]${NC} $1" >&2
 }
 
 log_docs() {
-    echo -e "${CYAN}[DOCS]${NC} $1"
+    echo -e "${CYAN}[DOCS]${NC} $1" >&2
 }
 
 show_help() {
@@ -111,6 +111,31 @@ build_docs() {
     log_docs "Documentation built: ${DOCS_DIST}"
 }
 
+needs_rebuild() {
+    # If binary doesn't exist, needs rebuild
+    if [[ ! -f "${BINARY_PATH}" ]]; then
+        return 0
+    fi
+
+    # Check if any Go source files are newer than the binary
+    local newest_source
+    newest_source=$(find "${SCRIPT_DIR}" -name "*.go" -newer "${BINARY_PATH}" 2>/dev/null | head -1)
+
+    if [[ -n "${newest_source}" ]]; then
+        return 0
+    fi
+
+    # Check if go.mod or go.sum changed
+    if [[ -f "${SCRIPT_DIR}/go.mod" && "${SCRIPT_DIR}/go.mod" -nt "${BINARY_PATH}" ]]; then
+        return 0
+    fi
+    if [[ -f "${SCRIPT_DIR}/go.sum" && "${SCRIPT_DIR}/go.sum" -nt "${BINARY_PATH}" ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
 build_binary() {
     log_info "Building rpg..."
 
@@ -122,6 +147,15 @@ build_binary() {
     go build -o "${BINARY_PATH}" ./cmd/rpg
 
     log_info "Built: ${BINARY_PATH}"
+}
+
+build_if_needed() {
+    if needs_rebuild; then
+        log_info "Source files changed, rebuilding..."
+        build_binary
+    else
+        log_info "Binary is up to date: ${BINARY_PATH}"
+    fi
 }
 
 clean() {
@@ -161,10 +195,7 @@ start_docs_dev() {
 }
 
 start_mcp_server() {
-    if [[ ! -f "${BINARY_PATH}" ]]; then
-        log_warn "Binary not found, building first..."
-        build_binary
-    fi
+    build_if_needed
 
     log_info "Starting MCP server..."
     log_info "Server communicates over stdio. Press Ctrl+C to stop."
@@ -174,10 +205,7 @@ start_mcp_server() {
 }
 
 start_both_servers() {
-    if [[ ! -f "${BINARY_PATH}" ]]; then
-        log_warn "Binary not found, building first..."
-        build_binary
-    fi
+    build_if_needed
 
     if [[ ! -d "${DOCS_DIST}" ]]; then
         log_warn "Docs not built, building first..."
@@ -261,18 +289,13 @@ if [[ "${DOCS_ONLY}" == "true" ]]; then
 fi
 
 if [[ "${MCP_ONLY}" == "true" ]]; then
-    build_binary
     start_mcp_server
     exit 0
 fi
 
 # Default: start docs dev server with hot reload + MCP server
 start_dev_with_mcp() {
-    # Build MCP binary if needed
-    if [[ ! -f "${BINARY_PATH}" ]]; then
-        log_warn "Binary not found, building first..."
-        build_binary
-    fi
+    build_if_needed
 
     check_node
     check_npm

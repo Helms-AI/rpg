@@ -74,12 +74,6 @@ func (s *Server) registerTools() {
 		Description: "Read a markdown specification file and return its content. The spec can be in any format - narrative descriptions, API designs, architecture documentation, or any markdown that describes an application.",
 	}, s.handleParseSpec)
 
-	// Tool: validate_spec
-	mcp.AddTool(s.mcpServer, &mcp.Tool{
-		Name:        "validate_spec",
-		Description: "Check if a spec file exists and contains content. Returns valid if the file is readable and non-empty.",
-	}, s.handleValidateSpec)
-
 	// Tool: get_generation_context
 	mcp.AddTool(s.mcpServer, &mcp.Tool{
 		Name:        "get_generation_context",
@@ -109,6 +103,53 @@ func (s *Server) registerTools() {
 		Name:        "import_spec_from_github",
 		Description: "Clone a GitHub repository and analyze its source code for AI-powered spec generation. Accepts repository URLs or shorthand (e.g., 'owner/repo', 'owner/repo@branch'). Returns an analysis prompt for generating a comprehensive .spec.md file. Supports private repos via GITHUB_TOKEN environment variable or token parameter.",
 	}, s.handleImportSpecFromGitHub)
+
+	// Tool: deep_analyze_source
+	mcp.AddTool(s.mcpServer, &mcp.Tool{
+		Name:        "deep_analyze_source",
+		Description: "Perform deep semantic analysis on source code using AST parsing and type resolution. Returns structured type definitions, function signatures, call graphs, and dependency information. Supports Go (native go/ast), TypeScript, Python, Java, Rust, and C# with varying levels of semantic depth.",
+	}, s.handleDeepAnalyzeSource)
+
+	// Tool: semantic_parity_analysis
+	mcp.AddTool(s.mcpServer, &mcp.Tool{
+		Name:        "semantic_parity_analysis",
+		Description: "Perform deep semantic parity analysis between source code and generated implementations. Compares types, functions, and behavior across languages using AST-based analysis. Returns detailed parity scores, gap analysis, and fix instructions.",
+	}, s.handleSemanticParityAnalysis)
+
+	// Tool: iterative_refinement_loop
+	mcp.AddTool(s.mcpServer, &mcp.Tool{
+		Name:        "iterative_refinement_loop",
+		Description: "Orchestrate an iterative refinement loop to achieve maximum parity between source and generated code. Analyzes, compares, and generates refinement instructions until convergence threshold is met or max iterations reached.",
+	}, s.handleIterativeRefinementLoop)
+
+	// ==========================================================================
+	// AUTONOMOUS CODE GENERATION - Spec-to-source with automatic parity loop
+	// ==========================================================================
+
+	// Tool: generate_source_from_spec
+	mcp.AddTool(s.mcpServer, &mcp.Tool{
+		Name: "generate_source_from_spec",
+		Description: "Autonomous code generation from spec with automatic parity validation. " +
+			"Parses spec using AI, generates complete source code for target language, " +
+			"validates parity, and loops to fix gaps until target parity achieved. " +
+			"Fully MCP-driven with no manual intervention required.",
+	}, s.handleGenerateSourceFromSpec)
+
+	// ==========================================================================
+	// AI ORCHESTRATION TOOLS - For multi-language analysis orchestrated by Claude
+	// ==========================================================================
+
+	// Tool: list_project_languages
+	mcp.AddTool(s.mcpServer, &mcp.Tool{
+		Name:        "list_project_languages",
+		Description: "Scan a source directory and return all detected programming languages with file counts and metadata. Returns which languages have semantic parsers available (for deep_analyze_source) vs which need AI interpretation (via get_files_for_language). Use this first to understand a multi-language codebase before analysis.",
+	}, s.handleListProjectLanguages)
+
+	// Tool: get_files_for_language
+	mcp.AddTool(s.mcpServer, &mcp.Tool{
+		Name:        "get_files_for_language",
+		Description: "Get raw file contents for a specific language for AI-driven analysis. Use this for languages without semantic parsers (SQL, Protobuf, GraphQL, etc.) or when you need the actual source code. Returns files with an AI prompt template for extracting types, functions, and patterns. The AI should interpret these files directly.",
+	}, s.handleGetFilesForLanguage)
 }
 
 // registerResources registers all MCP resources.
