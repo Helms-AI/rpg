@@ -52,6 +52,7 @@ const SetupIndex = lazy(() => import('./pages/Setup'));
 const ClaudeDesktop = lazy(() => import('./pages/Setup/ClaudeDesktop'));
 const ClaudeCode = lazy(() => import('./pages/Setup/ClaudeCode'));
 const VSCodeContinue = lazy(() => import('./pages/Setup/VSCodeContinue'));
+const VSCodeCopilot = lazy(() => import('./pages/Setup/VSCodeCopilot'));
 const Cursor = lazy(() => import('./pages/Setup/Cursor'));
 const Windsurf = lazy(() => import('./pages/Setup/Windsurf'));
 const Cline = lazy(() => import('./pages/Setup/Cline'));
@@ -131,6 +132,7 @@ function App() {
               <Route path="/setup/claude-desktop" element={<ClaudeDesktop />} />
               <Route path="/setup/claude-code" element={<ClaudeCode />} />
               <Route path="/setup/vscode-continue" element={<VSCodeContinue />} />
+              <Route path="/setup/vscode-copilot" element={<VSCodeCopilot />} />
               <Route path="/setup/cursor" element={<Cursor />} />
               <Route path="/setup/windsurf" element={<Windsurf />} />
               <Route path="/setup/cline" element={<Cline />} />

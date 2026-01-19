@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "rpg": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/bin/rpg",
+      "args": ["--output", "./generated"]
+    }
+  }
+}

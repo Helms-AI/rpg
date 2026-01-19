@@ -72,6 +72,7 @@ const navigation: NavItem[] = [
       { title: 'Claude Desktop', href: '/setup/claude-desktop' },
       { title: 'Claude Code', href: '/setup/claude-code' },
       { title: 'VS Code Continue', href: '/setup/vscode-continue' },
+      { title: 'VS Code Copilot', href: '/setup/vscode-copilot' },
       { title: 'Cursor', href: '/setup/cursor' },
       { title: 'Windsurf', href: '/setup/windsurf' },
       { title: 'Cline', href: '/setup/cline' },
