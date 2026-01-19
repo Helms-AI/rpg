@@ -35,11 +35,17 @@ const TypeScriptLang = lazy(() => import('./pages/Languages/TypeScript'));
 const McpToolsIndex = lazy(() => import('./pages/McpTools'));
 const ListLanguages = lazy(() => import('./pages/McpTools/ListLanguages'));
 const ParseSpec = lazy(() => import('./pages/McpTools/ParseSpec'));
-const ValidateSpec = lazy(() => import('./pages/McpTools/ValidateSpec'));
 const GetGenerationContext = lazy(() => import('./pages/McpTools/GetGenerationContext'));
 const GetProjectStructure = lazy(() => import('./pages/McpTools/GetProjectStructure'));
-const EnsureParity = lazy(() => import('./pages/McpTools/EnsureParity'));
+const GenerateSourceFromSpec = lazy(() => import('./pages/McpTools/GenerateSourceFromSpec'));
 const ImportSpecFromSource = lazy(() => import('./pages/McpTools/ImportSpecFromSource'));
+const ImportSpecFromGithub = lazy(() => import('./pages/McpTools/ImportSpecFromGithub'));
+const DeepAnalyzeSource = lazy(() => import('./pages/McpTools/DeepAnalyzeSource'));
+const ListProjectLanguages = lazy(() => import('./pages/McpTools/ListProjectLanguages'));
+const GetFilesForLanguage = lazy(() => import('./pages/McpTools/GetFilesForLanguage'));
+const EnsureParity = lazy(() => import('./pages/McpTools/EnsureParity'));
+const SemanticParityAnalysis = lazy(() => import('./pages/McpTools/SemanticParityAnalysis'));
+const IterativeRefinementLoop = lazy(() => import('./pages/McpTools/IterativeRefinementLoop'));
 
 // Setup
 const SetupIndex = lazy(() => import('./pages/Setup'));
@@ -111,11 +117,17 @@ function App() {
               <Route path="/mcp-tools" element={<McpToolsIndex />} />
               <Route path="/mcp-tools/list-languages" element={<ListLanguages />} />
               <Route path="/mcp-tools/parse-spec" element={<ParseSpec />} />
-              <Route path="/mcp-tools/validate-spec" element={<ValidateSpec />} />
               <Route path="/mcp-tools/get-generation-context" element={<GetGenerationContext />} />
               <Route path="/mcp-tools/get-project-structure" element={<GetProjectStructure />} />
-              <Route path="/mcp-tools/ensure-parity" element={<EnsureParity />} />
+              <Route path="/mcp-tools/generate-source-from-spec" element={<GenerateSourceFromSpec />} />
               <Route path="/mcp-tools/import-spec-from-source" element={<ImportSpecFromSource />} />
+              <Route path="/mcp-tools/import-spec-from-github" element={<ImportSpecFromGithub />} />
+              <Route path="/mcp-tools/deep-analyze-source" element={<DeepAnalyzeSource />} />
+              <Route path="/mcp-tools/list-project-languages" element={<ListProjectLanguages />} />
+              <Route path="/mcp-tools/get-files-for-language" element={<GetFilesForLanguage />} />
+              <Route path="/mcp-tools/ensure-parity" element={<EnsureParity />} />
+              <Route path="/mcp-tools/semantic-parity-analysis" element={<SemanticParityAnalysis />} />
+              <Route path="/mcp-tools/iterative-refinement-loop" element={<IterativeRefinementLoop />} />
 
               {/* Setup */}
               <Route path="/setup" element={<SetupIndex />} />

@@ -75,43 +75,68 @@ Options:
 
 ## MCP Tools
 
+RPG exposes 13 MCP tools organized into three categories:
+
+### Core Generation
+
 | Tool | Description |
 |------|-------------|
 | `list_languages` | List all supported languages with their conventions and idioms |
-| `parse_spec` | Parse a markdown spec file and return structured data |
-| `validate_spec` | Validate a spec file and return any errors or warnings |
-| `get_generation_context` | Get full context for code generation including spec, language conventions, and prompt template |
-| `get_project_structure` | Get recommended file structure for a spec in a target language |
-| `ensure_parity` | Compare implementations across languages and generate fix instructions for gaps |
-| `import_spec_from_source` | Analyze existing source code for AI-powered spec generation |
-| `import_spec_from_github` | Clone a GitHub repo and analyze for spec generation |
+| `parse_spec` | Read markdown specification file content |
+| `get_generation_context` | Get spec + language conventions + prompt template for code generation |
+| `get_project_structure` | Get recommended file structure for a project in the target language |
+| `generate_source_from_spec` | Autonomous code generation with automatic parity validation |
+
+### Import & Analysis
+
+| Tool | Description |
+|------|-------------|
+| `import_spec_from_source` | Analyze local source code for AI-powered spec generation |
+| `import_spec_from_github` | Clone and analyze a GitHub repository for spec generation |
+| `deep_analyze_source` | AST-based semantic analysis (types, functions, call graphs) |
+| `list_project_languages` | Detect all programming languages in a project |
+| `get_files_for_language` | Get raw file contents for AI-driven analysis |
+
+### Parity & Refinement
+
+| Tool | Description |
+|------|-------------|
+| `ensure_parity` | Compare implementations across languages with fix instructions |
+| `semantic_parity_analysis` | Deep semantic comparison using AST-based analysis |
+| `iterative_refinement_loop` | Automated refinement until parity threshold is reached |
 
 ### Tool Usage Examples
 
-**Import spec from GitHub repository:**
+**Import from GitHub and port to new languages:**
 ```
-Use rpg import_spec_from_github on owner/repo to analyze it for spec generation
-Use rpg import_spec_from_github on https://github.com/owner/repo@main
-```
-
-**Import spec from local code:**
-```
-Use rpg import_spec_from_source on ./my-java-project to analyze it for spec generation
+Use rpg import_spec_from_github on owner/repo to analyze the codebase
+Generate a spec from the analysis, then port to TypeScript and Go
 ```
 
-**Get generation context for a spec:**
+**Autonomous code generation:**
+```
+Use rpg generate_source_from_spec to create a Rust implementation from my-api.spec.md
+The tool will automatically validate parity and iterate until complete
+```
+
+**Deep analysis for complex codebases:**
+```
+Use rpg list_project_languages on ./my-project to see what languages are used
+Use rpg deep_analyze_source for semantic analysis of the Go code
+Use rpg get_files_for_language for SQL and Protobuf files
+```
+
+**Iterative refinement for production quality:**
+```
+Use rpg iterative_refinement_loop to port my Go project to TypeScript
+Keep refining until 95% parity is achieved
+```
+
+**Basic generation workflow:**
 ```
 Use rpg get_generation_context for examples/my-api.spec.md in typescript
-```
-
-**Generate in multiple languages:**
-```
 Generate the slugify spec in go, rust, and python
-```
-
-**Check parity across implementations:**
-```
-Use rpg ensure_parity to compare the go and typescript implementations
+Use rpg ensure_parity to compare implementations
 ```
 
 ## Importing Specs from Existing Code
@@ -427,13 +452,6 @@ rpg/
 1. Rebuild the binary: `make build`
 2. Restart Claude Code to reload MCP servers
 3. Check the path in `.mcp.json` is absolute
-
-### Validation Errors
-
-Run validation to see specific issues:
-```
-Use rpg validate_spec on examples/my-spec.md
-```
 
 ### Missing Language
 
