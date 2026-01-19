@@ -1,4 +1,20 @@
-# rpg - Reference Project Generator
+```
+    ╔══════════════════╦═══════════════╦══════════════╤▶══╗ ·*·     ·*·        _..--""""--.._
+    ║░░░░░░░░░░░░░░░░░░║ ANY  LANGUAGE ║▓▓▓▓▓▓▓▓▓▓▓▓▓▓├▶  ╠═))·*·*·*·*·((══.'                '-.
+    ╚══════════════════╩═══════════════╩══════════════╧▶══╝ ·*·     ·*· .'    Go                '.
+             │                                                        /    Rust ╲      │      ╱ Java \
+             │   ██████╗ ██████╗  ██████╗                             |          ╲     │     ╱        |
+            ╱╲   ██╔══██╗██╔══██╗██╔════╝                             |           ╲    │    ╱         |
+           ╱  ╲  ██████╔╝██████╔╝██║  ███╗                            |       _____╲___│___╱_____     |
+          ╱    ╲ ██╔══██╗██╔═══╝ ██║   ██║                            | C# ────────(⚡)──────── Python |
+                 ██║  ██║██║     ╚██████╔╝                            |       ‾‾‾‾‾╱‾‾‾│‾‾‾╲‾‾‾‾‾     |
+                 ╚═╝  ╚═╝╚═╝      ╚═════╝                              \          ╱    │    ╲        /
+                                                                        '.      ╱     │     ╲     .'
+                 Rosetta Project Generator                               '-.      TypeScript   .-'
+                                                                            ''--..______..--''
+```
+
+# rpg - Rosetta Project Generator
 
 A markdown-driven multi-language code generation tool exposed as an MCP (Model Context Protocol) server. Write specifications in natural language markdown, and AI agents translate them into idiomatic code for any supported language.
 

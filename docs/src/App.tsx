@@ -63,9 +63,6 @@ const MultiLanguage = lazy(() => import('./pages/Tutorials/MultiLanguage'));
 const RestApi = lazy(() => import('./pages/Tutorials/RestApi'));
 const ParityChecking = lazy(() => import('./pages/Tutorials/ParityChecking'));
 
-// Playground
-const Playground = lazy(() => import('./pages/Playground'));
-
 // API
 const ApiIndex = lazy(() => import('./pages/Api'));
 const Schemas = lazy(() => import('./pages/Api/Schemas'));
@@ -144,9 +141,6 @@ function App() {
               <Route path="/tutorials/multi-language" element={<MultiLanguage />} />
               <Route path="/tutorials/rest-api" element={<RestApi />} />
               <Route path="/tutorials/parity-checking" element={<ParityChecking />} />
-
-              {/* Playground */}
-              <Route path="/playground" element={<Playground />} />
 
               {/* API */}
               <Route path="/api" element={<ApiIndex />} />

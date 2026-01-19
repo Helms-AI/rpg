@@ -1,4 +1,4 @@
-# RPG - Reference Project Generator
+# RPG - Rosetta Project Generator
 
 A markdown-driven multi-language code generation tool exposed as an MCP (Model Context Protocol) server. RPG translates natural language specifications into idiomatic code across 6 supported languages. Specs can be written in any narrative format - architecture docs, API designs, or feature descriptions - and the AI interprets the content directly to generate code.
 

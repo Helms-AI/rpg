@@ -7,7 +7,6 @@ const navigation = [
   { name: 'Docs', href: '/getting-started' },
   { name: 'Languages', href: '/languages' },
   { name: 'Tools', href: '/mcp-tools' },
-  { name: 'Playground', href: '/playground' },
 ];
 
 export default function Header() {
@@ -28,10 +27,10 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Top">
+      <nav className="px-4 sm:px-6 lg:px-8" aria-label="Top">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
             <Link to="/" className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
                 <span className="text-white font-bold text-lg">R</span>

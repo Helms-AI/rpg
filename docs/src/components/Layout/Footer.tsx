@@ -22,14 +22,6 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  to="/playground"
-                  className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                >
-                  Playground
-                </Link>
-              </li>
-              <li>
-                <Link
                   to="/languages"
                   className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                 >
@@ -153,7 +145,7 @@ export default function Footer() {
                 <span className="text-white font-bold text-xs">R</span>
               </div>
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                RPG - Reference Project Generator
+                RPG - Rosetta Project Generator
               </span>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-500">

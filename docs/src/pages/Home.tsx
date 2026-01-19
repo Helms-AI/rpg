@@ -8,7 +8,6 @@ import {
   FileCode,
   Zap,
   Check,
-  Terminal,
   Layers,
   RefreshCw,
 } from 'lucide-react';
@@ -290,13 +289,6 @@ export default function Home() {
                   Get Started
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <Link
-                  to="/playground"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-700 transition-all border border-gray-700"
-                >
-                  <Terminal className="w-4 h-4" />
-                  Try Playground
-                </Link>
               </div>
 
               {/* Language badges */}
@@ -489,7 +481,7 @@ export default function Home() {
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
                 <span className="text-white font-bold">R</span>
               </div>
-              <span className="text-gray-400">RPG - Reference Project Generator</span>
+              <span className="text-gray-400">RPG - Rosetta Project Generator</span>
             </div>
             <p className="text-gray-500 text-sm">
               Built with AI, for AI-powered development.

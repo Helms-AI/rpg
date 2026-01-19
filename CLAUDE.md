@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-RPG (Reference Project Generator) is a markdown-driven multi-language code generation tool exposed as an MCP server. It translates natural language specifications into idiomatic code across 6 languages: Go, Rust, Java, Python, TypeScript, and C#.
+RPG (Rosetta Project Generator) is a markdown-driven multi-language code generation tool exposed as an MCP server. It translates natural language specifications into idiomatic code across 6 languages: Go, Rust, Java, Python, TypeScript, and C#.
 
 ## Build & Development Commands
 
